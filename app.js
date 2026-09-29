@@ -162,6 +162,7 @@ function setPage(page){
   document.getElementById(map[page]).classList.add('active');
   document.querySelectorAll('.nav-button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
   const title={binder:'バインダー',selected:'選択中',qr:'QR表示',settings:'設定',outfits:'お気に入りコーデ'}[page];document.getElementById('pageTitle').textContent=title;
+  document.querySelector('.topbar').classList.toggle('qr-hidden',page==='qr');
   if(page==='qr'){renderQR();requestWakeLock()} else releaseWakeLock();
   if(page==='outfits') renderOutfits(); if(page==='settings')renderSettings(); renderMini(); window.scrollTo({top:0,behavior:'instant'});
 }
