@@ -74,7 +74,7 @@ function filteredCards(){
 }
 function selectedIds(){return new Set(Object.values(state.selected).filter(Boolean).map(c=>c.card_no))}
 function cardImageHTML(card, cls='card-image'){
-  return `<img class="${cls}" src="${esc(card.image_url)}" alt="${esc(card.card_name||card.card_no)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;card-fallback&quot;>${esc(card.card_no)}<br>画像なし</div>'">`;
+  return `<img class="${cls}" src="${esc(card.image_url)}" referrerpolicy="no-referrer" alt="${esc(card.card_name||card.card_no)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;card-fallback&quot;>${esc(card.card_no)}<br>画像なし</div>'">`;
 }
 function renderCards(){
   const cards=filteredCards(), grid=document.getElementById('cardGrid'), selected=selectedIds();
@@ -133,7 +133,7 @@ function renderMini(){
   const cards=SLOT_ORDER.map(k=>state.selected[k]).filter(Boolean), bar=document.getElementById('selectedMiniBar');
   bar.classList.toggle('hidden',cards.length===0 || state.currentPage==='qr');
   document.getElementById('miniCount').textContent=`${cards.length}枚`;
-  document.getElementById('miniCards').innerHTML=cards.map(c=>`<img src="${esc(c.image_url)}" alt="" onerror="this.className='mini-placeholder';this.removeAttribute('src')">`).join('');
+  document.getElementById('miniCards').innerHTML=cards.map(c=>`<img src="${esc(c.image_url)}" alt="" referrerpolicy="no-referrer" onerror="this.className='mini-placeholder';this.removeAttribute('src')">`).join('');
 }
 function renderActiveFilters(){
   const el=document.getElementById('activeFilters'), chips=[];
@@ -194,7 +194,7 @@ function saveOutfit(){
 }
 function renderOutfits(){
   const el=document.getElementById('outfitList');document.getElementById('emptyOutfits').classList.toggle('hidden',state.outfits.length>0);
-  el.innerHTML=state.outfits.map(o=>`<div class="outfit-card"><div class="outfit-top"><div class="outfit-name">${esc(o.name)}</div><div class="outfit-actions"><button class="use-outfit" data-useoutfit="${o.id}">使う</button><button class="delete-outfit" data-deleteoutfit="${o.id}">削除</button></div></div><div class="outfit-thumbs">${SLOT_ORDER.map(s=>o.cards[s]).filter(Boolean).map(c=>`<img src="${esc(c.image_url)}" alt="">`).join('')}</div></div>`).join('');
+  el.innerHTML=state.outfits.map(o=>`<div class="outfit-card"><div class="outfit-top"><div class="outfit-name">${esc(o.name)}</div><div class="outfit-actions"><button class="use-outfit" data-useoutfit="${o.id}">使う</button><button class="delete-outfit" data-deleteoutfit="${o.id}">削除</button></div></div><div class="outfit-thumbs">${SLOT_ORDER.map(s=>o.cards[s]).filter(Boolean).map(c=>`<img src="${esc(c.image_url)}" alt="" referrerpolicy="no-referrer">`).join('')}</div></div>`).join('');
 }
 function useOutfit(id){const o=state.outfits.find(x=>x.id===id);if(!o)return;state.selected=JSON.parse(JSON.stringify(o.cards));saveJSON(LS.selected,state.selected);renderAll();setPage('selected');toast(`${o.name}をセットしました`)}
 function deleteOutfit(id){const o=state.outfits.find(x=>x.id===id);if(!o)return;if(!confirm(`${o.name}を削除しますか？`))return;state.outfits=state.outfits.filter(x=>x.id!==id);saveJSON(LS.outfits,state.outfits);renderOutfits();renderSelected();}
