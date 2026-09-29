@@ -161,8 +161,9 @@ function setPage(page){
   const map={binder:'binderPage',selected:'selectedPage',qr:'qrPage',settings:'settingsPage',outfits:'outfitsPage'};
   document.getElementById(map[page]).classList.add('active');
   document.querySelectorAll('.nav-button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
-  const title={binder:'バインダー',selected:'選択中',qr:'QR表示',settings:'設定',outfits:'お気に入りコーデ'}[page];document.getElementById('pageTitle').textContent=title;
-  document.querySelector('.topbar').classList.toggle('qr-hidden',page==='qr');
+  const title={binder:'',selected:'選択中',qr:'',settings:'設定',outfits:'お気に入りコーデ'}[page];
+  document.getElementById('pageTitle').textContent=title;
+  document.querySelector('.topbar').classList.toggle('page-title-hidden',page==='binder'||page==='qr');
   if(page==='qr'){renderQR();requestWakeLock()} else releaseWakeLock();
   if(page==='outfits') renderOutfits(); if(page==='settings')renderSettings(); renderMini(); window.scrollTo({top:0,behavior:'instant'});
 }
@@ -177,7 +178,7 @@ function renderQR(){
     if(!c.qr_url){box.innerHTML='<div class="qr-error">QRを表示できません</div>';continue}
     try{
       if(typeof QRCode==='undefined') throw new Error('QR library not loaded');
-      new QRCode(box,{text:c.qr_url,width:300,height:300,correctLevel:QRCode.CorrectLevel.M});
+      new QRCode(box,{text:c.qr_url,width:140,height:140,correctLevel:QRCode.CorrectLevel.M});
     }catch(e){console.error(e);box.innerHTML='<div class="qr-error">QRを表示できません</div>'}
   }
 }
