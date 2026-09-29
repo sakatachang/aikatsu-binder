@@ -8,8 +8,8 @@ const LS = {
 };
 
 const SLOT_ORDER = ['tops','bottoms','shoes','accessory'];
-const SLOT_LABEL = {tops:'トップス',bottoms:'ボトムス',shoes:'シューズ',accessory:'アクセ'};
-const CATEGORY_SLOT = {'トップス':'tops','ボトムス':'bottoms','シューズ':'shoes','アクセ':'accessory','トップス＆ボトムス':'tops'};
+const SLOT_LABEL = {tops:'トップス',bottoms:'ボトムス',shoes:'シューズ',accessory:'アクセサリー'};
+const CATEGORY_SLOT = {'トップス':'tops','ボトムス':'bottoms','シューズ':'shoes','アクセサリー':'accessory','トップス＆ボトムス':'tops'};
 const TYPE_CLASS = {'キュート':'cute','クール':'cool','セクシー':'sexy','ポップ':'pop'};
 const state = {
   cards: [],
