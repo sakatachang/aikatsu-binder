@@ -9,7 +9,8 @@ const LS = {
 
 const SLOT_ORDER = ['tops','bottoms','shoes','accessory'];
 const SLOT_LABEL = {tops:'トップス',bottoms:'ボトムス',shoes:'シューズ',accessory:'アクセサリー'};
-const CATEGORY_SLOT = {'トップス':'tops','ボトムス':'bottoms','シューズ':'shoes','アクセサリー':'accessory','トップス＆ボトムス':'tops'};
+const CATEGORY_SLOT = {'トップス':'tops','ボトムス':'bottoms','シューズ':'shoes','アクセサリー':'accessory','トップス&ボトムス':'tops','トップス＆ボトムス':'tops'};
+function isCombinedCategory(category){ return category==='トップス&ボトムス' || category==='トップス＆ボトムス'; }
 const TYPE_CLASS = {'キュート':'cute','クール':'cool','セクシー':'sexy','ポップ':'pop'};
 const state = {
   cards: [],
@@ -104,7 +105,7 @@ function toggleSelect(id){
   const card=getCard(id); if(!card)return;
   const already=Object.entries(state.selected).find(([,c])=>c?.card_no===id);
   if(already){ delete state.selected[already[0]]; }
-  else if(card.category==='トップス＆ボトムス'){
+  else if(isCombinedCategory(card.category)){
     delete state.selected.tops; delete state.selected.bottoms; state.selected.tops={...card,combined:true};
   } else {
     const slot=CATEGORY_SLOT[card.category]; if(!slot)return;
@@ -120,7 +121,7 @@ function toggleFavorite(id){state.favorites.has(id)?state.favorites.delete(id):s
 function renderSelected(){
   const el=document.getElementById('selectedSlots'); let html='';
   for(const slot of SLOT_ORDER){
-    const c=state.selected[slot]; const label=(slot==='tops'&&c?.combined)?'トップス＆ボトムス':SLOT_LABEL[slot];
+    const c=state.selected[slot]; const label=(slot==='tops'&&c?.combined)?'トップス&ボトムス':SLOT_LABEL[slot];
     if(c) html+=`<div class="selected-slot">${cardImageHTML(c,'slot-thumb')}<div class="slot-main"><div class="slot-kind">${label}</div><div class="slot-name">${esc(c.card_name)}</div><div class="slot-brand">${esc(c.brand||'ブランドなし')}</div></div><button class="remove-button" data-remove="${slot}">削除</button></div>`;
     else if(!(slot==='bottoms'&&state.selected.tops?.combined)) html+=`<div class="selected-slot empty">${label}：未選択</div>`;
   }
@@ -169,7 +170,7 @@ function setPage(page){
 }
 function renderQR(){
   const combined=state.selected.tops?.combined;
-  document.querySelector('[data-qrslot="tops"] .qr-label').textContent=combined?'トップス＆ボトムス':'トップス';
+  document.querySelector('[data-qrslot="tops"] .qr-label').textContent=combined?'トップス&ボトムス':'トップス';
   for(const slot of SLOT_ORDER){
     const box=document.querySelector(`[data-qrslot="${slot}"] .qr-box`), no=document.querySelector(`[data-qrslot="${slot}"] .qr-cardno`); box.innerHTML='';no.textContent='';
     if(slot==='bottoms'&&combined){box.innerHTML='<div class="qr-empty">空欄</div>';continue}
