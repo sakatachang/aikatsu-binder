@@ -4,13 +4,14 @@ const LS = {
   selected: 'aikatsuBinder:selected:v1',
   outfits: 'aikatsuBinder:outfits:v1',
   filters: 'aikatsuBinder:filters:v1',
-  search: 'aikatsuBinder:search:v1'
+  search: 'aikatsuBinder:search:v1',
+  initialView: 'aikatsuBinder:initialView:v2'
 };
 
 const SLOT_ORDER = ['tops','bottoms','shoes','accessory'];
 const SLOT_LABEL = {tops:'トップス',bottoms:'ボトムス',shoes:'シューズ',accessory:'アクセサリー'};
 const CATEGORY_SLOT = {'トップス':'tops','ボトムス':'bottoms','シューズ':'shoes','アクセサリー':'accessory','トップス&ボトムス':'tops','トップス＆ボトムス':'tops'};
-function isCombinedCategory(category){ return category==='トップス&ボトムス' || category==='トップス＆ボトムス'; }
+function isCombinedCategory(category){return category==='トップス&ボトムス'||category==='トップス＆ボトムス';}
 const TYPE_CLASS = {'キュート':'cute','クール':'cool','セクシー':'sexy','ポップ':'pop'};
 const state = {
   cards: [],
@@ -43,7 +44,7 @@ async function loadCards(){
   try{
     const res=await fetch(`${CSV_FILE}?v=${Date.now()}`,{cache:'no-store'}); if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const text=await res.text(); state.cards=csvParse(text.replace(/^\uFEFF/,'')); state.loadedAt=new Date();
-    sanitizeLocalState(); renderAll(); toast(`${state.cards.length}枚のカードを読み込みました`);
+    applyInitialView(); sanitizeLocalState(); renderAll(); toast(`${state.cards.length}枚のカードを読み込みました`);
   }catch(e){
     console.error(e); document.getElementById('cardGrid').innerHTML=''; document.getElementById('emptyCards').classList.remove('hidden'); document.getElementById('emptyCards').textContent='カードデータを読み込めませんでした。GitHub Pages上で開いているか確認してください。';
   }
@@ -54,6 +55,16 @@ function sanitizeLocalState(){
   Object.keys(state.selected).forEach(k=>{ if(!state.selected[k]||!ids.has(state.selected[k].card_no)) delete state.selected[k]; }); saveJSON(LS.selected,state.selected);
 }
 function normalize(s){return (s||'').toLowerCase().normalize('NFKC')}
+function applyInitialView(){
+  if(localStorage.getItem(LS.initialView)) return;
+  const series=[...new Set(state.cards.map(c=>c.series).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ja',{numeric:true}));
+  const preferred=series.find(v=>/2013/.test(v)) || series[0];
+  if(preferred){
+    state.filters={type:[],brand:[],category:[],rarity:[],series:[preferred],volume:[],promo:[]};
+    saveJSON(LS.filters,state.filters);
+  }
+  localStorage.setItem(LS.initialView,'1');
+}
 function sortCards(cards){
   return [...cards].sort((a,b)=>{
     const sa=parseInt(a.series)||9999,sb=parseInt(b.series)||9999;if(sa!==sb)return sa-sb;
@@ -84,9 +95,8 @@ function renderCards(){
   grid.innerHTML=cards.map(c=>`<article class="card-item" data-card="${esc(c.card_no)}">
     <div class="card-image-wrap ${selected.has(c.card_no)?'selected':''}" data-select="${esc(c.card_no)}">
       ${cardImageHTML(c)}
-      <button class="fav-button ${state.favorites.has(c.card_no)?'on':''}" data-fav="${esc(c.card_no)}" aria-label="お気に入り">${state.favorites.has(c.card_no)?'♥':'♡'}</button>
     </div>
-    <div class="card-no">${esc(c.card_no)}</div><span class="type-dot ${TYPE_CLASS[c.type]||''}"></span>
+    <div class="card-no">${esc(c.card_no)}</div>
   </article>`).join('');
   bindLongPress();
 }
@@ -97,7 +107,7 @@ function bindLongPress(){
     const cancel=()=>{clearTimeout(timer)};
     el.addEventListener('touchstart',start,{passive:true});el.addEventListener('touchend',cancel);el.addEventListener('touchmove',cancel);
     el.addEventListener('mousedown',start);el.addEventListener('mouseup',cancel);el.addEventListener('mouseleave',cancel);
-    el.addEventListener('click',e=>{if(e.target.closest('[data-fav]'))return;if(long){long=false;return;}toggleSelect(el.dataset.select)});
+    el.addEventListener('click',()=>{if(long){long=false;return;}toggleSelect(el.dataset.select)});
   });
 }
 function getCard(id){return state.cards.find(c=>c.card_no===id)}
@@ -166,7 +176,7 @@ function setPage(page){
   document.getElementById('pageTitle').textContent=title;
   document.querySelector('.topbar').classList.toggle('page-title-hidden',page==='binder'||page==='qr');
   if(page==='qr'){renderQR();requestWakeLock()} else releaseWakeLock();
-  if(page==='outfits') renderOutfits(); if(page==='settings')renderSettings(); renderMini(); window.scrollTo({top:0,behavior:'instant'});
+  if(page==='outfits') renderOutfits(); if(page==='settings')renderSettings(); renderMini(); const scroller=document.querySelector('main'); if(scroller) scroller.scrollTop=0;
 }
 function renderQR(){
   const combined=state.selected.tops?.combined;
@@ -210,7 +220,6 @@ function renderAll(){renderCards();renderSelected();renderMini();renderActiveFil
 
 // events
 document.addEventListener('click',e=>{
-  const fav=e.target.closest('[data-fav]');if(fav){e.stopPropagation();toggleFavorite(fav.dataset.fav);return}
   const rem=e.target.closest('[data-remove]');if(rem){removeSlot(rem.dataset.remove);return}
   const opt=e.target.closest('[data-filteropt]');if(opt){const [k,v]=opt.dataset.filteropt.split('|');const arr=state.draftFilters[k]||[];state.draftFilters[k]=arr.includes(v)?arr.filter(x=>x!==v):[...arr,v];renderFilterSheet();return}
   const clear=e.target.closest('[data-clearfilter]');if(clear){const [k,v]=clear.dataset.clearfilter.split('|');state.filters[k]=(state.filters[k]||[]).filter(x=>x!==v);saveJSON(LS.filters,state.filters);renderCards();renderActiveFilters();return}
