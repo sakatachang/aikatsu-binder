@@ -13,6 +13,30 @@ const SLOT_LABEL = {tops:'トップス',bottoms:'ボトムス',shoes:'シュー�
 const CATEGORY_SLOT = {'トップス':'tops','ボトムス':'bottoms','シューズ':'shoes','アクセサリー':'accessory','トップス&ボトムス':'tops','トップス＆ボトムス':'tops'};
 function isCombinedCategory(category){return category==='トップス&ボトムス'||category==='トップス＆ボトムス';}
 const TYPE_CLASS = {'キュート':'cute','クール':'cool','セクシー':'sexy','ポップ':'pop'};
+
+function brandTypeMap(){
+  const counts = {};
+  for(const card of state.cards){
+    const brand=(card.brand||'').trim(), type=(card.type||'').trim();
+    if(!brand || !TYPE_CLASS[type]) continue;
+    counts[brand] ||= {};
+    counts[brand][type] = (counts[brand][type]||0) + 1;
+  }
+  const result = {};
+  for(const [brand, byType] of Object.entries(counts)){
+    result[brand] = Object.entries(byType).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+  }
+  return result;
+}
+
+function filterOptionClass(key, value){
+  if(key==='type') return TYPE_CLASS[value] ? `tone-${TYPE_CLASS[value]}` : '';
+  if(key==='brand'){
+    const type=brandTypeMap()[value];
+    return TYPE_CLASS[type] ? `tone-${TYPE_CLASS[type]}` : '';
+  }
+  return '';
+}
 const state = {
   cards: [],
   favorites: new Set(loadJSON(LS.favorites, [])),
@@ -154,13 +178,32 @@ function renderActiveFilters(){
 function filterOptions(key){
   if(key==='promo') return ['通常','プロモ'];
   let pool=state.cards;
-  if(key==='brand' && state.draftFilters?.type?.length) pool=pool.filter(c=>state.draftFilters.type.includes(c.type));
-  return [...new Set(pool.map(c=>c[key]).filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'ja',{numeric:true}));
+
+  // 弾は選択中のシリーズに合わせて候補を絞る
+  if(key==='volume' && state.draftFilters?.series?.length){
+    pool=pool.filter(c=>state.draftFilters.series.includes(c.series));
+  }
+
+  // ブランドは選択中のタイプに合わせて候補を絞る
+  if(key==='brand' && state.draftFilters?.type?.length){
+    pool=pool.filter(c=>state.draftFilters.type.includes(c.type));
+  }
+
+  return [...new Set(pool.map(c=>c[key]).filter(Boolean))]
+    .sort((a,b)=>String(a).localeCompare(String(b),'ja',{numeric:true}));
 }
 function renderFilterSheet(){
-  const groups=[['type','タイプ'],['brand','ブランド'],['category','カード種類'],['rarity','レアリティ'],['series','シリーズ'],['volume','弾'],['promo','カード区分']];
+  const groups=[
+    ['series','シリーズ'],
+    ['volume','弾'],
+    ['type','タイプ'],
+    ['category','カード種類'],
+    ['rarity','レアリティ'],
+    ['promo','カード区分'],
+    ['brand','ブランド']
+  ];
   const root=document.getElementById('filterGroups');
-  root.innerHTML=groups.map(([key,label])=>`<div class="filter-group"><h3>${label}</h3><div class="option-grid">${filterOptions(key).map(v=>`<button class="option-button ${(state.draftFilters[key]||[]).includes(v)?'on':''}" data-filteropt="${key}|${esc(v)}">${esc(v)}</button>`).join('')||'<span class="sub-note">データなし</span>'}</div></div>`).join('');
+  root.innerHTML=groups.map(([key,label])=>`<div class="filter-group"><h3>${label}</h3><div class="option-grid">${filterOptions(key).map(v=>`<button class="option-button ${filterOptionClass(key,v)} ${(state.draftFilters[key]||[]).includes(v)?'on':''}" data-filteropt="${key}|${esc(v)}">${esc(v)}</button>`).join('')||'<span class="sub-note">データなし</span>'}</div></div>`).join('');
 }
 function openFilter(){state.draftFilters=JSON.parse(JSON.stringify(state.filters));renderFilterSheet();document.getElementById('filterSheet').classList.remove('hidden')}
 function closeFilter(){document.getElementById('filterSheet').classList.add('hidden')}
