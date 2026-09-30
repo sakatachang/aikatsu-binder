@@ -71,3 +71,46 @@ main{
   .bottom-nav{max-width:none;left:0;right:0;transform:translateZ(0)}
   .selected-mini-bar{max-width:none;left:10px;right:10px;width:auto;transform:none}
 }
+
+
+/* ===== 2026-09-30 filter order + type/brand colors ===== */
+.option-button.tone-cute{
+  background:#fff2f7;
+  border-color:#f4b3cc;
+  color:#d94f86;
+}
+.option-button.tone-cool{
+  background:#eef8ff;
+  border-color:#a9d7f5;
+  color:#398ec7;
+}
+.option-button.tone-sexy{
+  background:#f7f0ff;
+  border-color:#cdb1f3;
+  color:#8457c7;
+}
+.option-button.tone-pop{
+  background:#fff8e5;
+  border-color:#f1cf72;
+  color:#d18a12;
+}
+.option-button.tone-cute.on{
+  background:#f7b8d0;
+  border-color:#ea78a4;
+  color:#8f2350;
+}
+.option-button.tone-cool.on{
+  background:#b9e1fb;
+  border-color:#68b8ea;
+  color:#155c89;
+}
+.option-button.tone-sexy.on{
+  background:#d7c0f5;
+  border-color:#aa7fe3;
+  color:#5a3291;
+}
+.option-button.tone-pop.on{
+  background:#f7d77e;
+  border-color:#e9b83d;
+  color:#865907;
+}
